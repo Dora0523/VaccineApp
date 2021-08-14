@@ -3,10 +3,12 @@
 This project is an application to manage the COVID vaccination distribution process in Quebec in simplified situation. 
 
 The design of the application relations can be demonstrated by this ER diagram:
+
 ![ER](https://user-images.githubusercontent.com/65501463/129459075-4659c867-5321-415d-aef5-659da1d93377.png)
 
 
 Database relation model is translated into following:
+
 ![RelationModel](https://user-images.githubusercontent.com/65501463/129459028-5622b5a7-f4c7-4f4e-8ee5-ec27969f8044.png)
 
 
