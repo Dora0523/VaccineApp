@@ -13,7 +13,7 @@ Database relation model is translated into following:
 
 
 ## **Functions**
-### **Registration**
+### **1. Registration**
 The application allows registration to anyone who is a Quebec resident with a valid health insurance card. 
 Information will be updated if the HI number entered is already in the system
 
@@ -23,20 +23,20 @@ A priority system is setup to ensure that the population with highest risk will 
 3. Essential Service Workers, Those in physical proximity to second priority
 4. Everybody else
 
-### **Vaccine Appointment**
+### **2. Vaccine Appointment**
 The application can allows a registered person to make an appointment for vaccine shots with preferred location, date and time that is available in the database.
 Person who already took maximum number of required doses will be prevented from making another appointment
 
-### **Enter Vaccination Info**
+### **3. Enter Vaccination Info**
 The application allows registered person who took the vaccine shot to enter the vaccination information to the database system.
 
 Warning will be raised if the vaccine brand entered does not match the previous record
 
-### **Exit Program**
+### **4. Exit Program**
 The application will return to the main menu entil 'Exit Application' is selected
 
 ## **DEMO**
-###**Main Menu**
+### **Main Menu**
 ![截屏2021-08-14 下午4 38 46](https://user-images.githubusercontent.com/65501463/129459487-64a46c32-2ecc-4fcd-985d-f1545c65a02a.png)
 
 ### **Option 1**
