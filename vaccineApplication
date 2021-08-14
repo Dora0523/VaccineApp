@@ -1,0 +1,422 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.util.Scanner;
+import java.util.Random;
+
+public class VaccineApp {
+    public static void main ( String [ ] args ) throws SQLException
+    {
+
+        // setup ****************
+        String tableName = "";
+        int sqlCode=0;      // Variable to hold SQLCODE
+        String sqlState="00000";  // Variable to hold SQLSTATE
+        // Register the driver.  You must register the driver before you can use it.
+        try { DriverManager.registerDriver ( new com.ibm.db2.jcc.DB2Driver() ) ; }
+        catch (Exception cnfe){ System.out.println("Class not found"); }
+        String url = "jdbc:db2://winter2021-comp421.cs.mcgill.ca:50000/cs421";
+        String your_userid = "xhou7";
+        String your_password = "1999523Hxc";
+        if(your_userid == null && (your_userid = System.getenv("SOCSUSER")) == null)
+        {
+            System.err.println("Error!! do not have a password to connect to the database!");
+            System.exit(1);
+        }
+        if(your_password == null && (your_password = System.getenv("SOCSPASSWD")) == null)
+        {
+            System.err.println("Error!! do not have a password to connect to the database!");
+            System.exit(1);
+        }
+        Connection con = DriverManager.getConnection (url,your_userid,your_password) ;
+        Statement statement = con.createStatement ( ) ;
+        //////////////////////////////////////////////////////////////////////////////////
+
+
+        Scanner read=new Scanner(System.in).useDelimiter("\n");
+        while (true){
+            System.out.println("VaccineApp Main Menu");
+            System.out.println("   1. Add a Person");
+            System.out.println("   2. Assign a slot to a Person");
+            System.out.println("   3. Enter Vaccination information");
+            System.out.println("   4. Exit Application");
+            System.out.println("Please enter your Option:");
+
+            int opt = read.nextInt();
+            if(1>opt || opt>4){
+                System.out.println("Please enter a valid option");
+            }
+            else if(opt==4) {
+                System.out.println("exiting.. ");
+                break;
+            }else{
+                /* AddPerson ********************************************************/
+                outer: if (opt==1){
+                    int action=0; //0: insert,1: update
+                    System.out.println("1. Add a Person --- ");
+                    System.out.println("Please enter your 10 digit Health Insurance Number: ");
+                    String HI = read.next();
+                    if (HI==""){
+                        System.out.println("Health Insurance Number cannot be empty. ");
+                        break;
+                    }
+
+                    //try if HI exists
+                    String querySQL = "SELECT name from Person WHERE HI# = \'"+HI+"\'";
+                    java.sql.ResultSet rs = statement.executeQuery ( querySQL ) ;
+
+                        while ( rs.next ( ) )
+                        {
+                            System.out.println("You have an existing Health Insurance account, do you with to update information? Y/N ");
+                            String s =read.next();
+                            System.out.println(s);
+                            if (s.equals("Y")){
+                                action=1; //update account
+                                System.out.println("Updating account ");
+                            }else{
+                                System.out.println("Exiting.. no action taken");
+                                break outer;
+                            }
+
+                        }
+
+
+                    System.out.println("Please enter your name: ");
+                    String name = read.next();
+
+                    System.out.println("Please enter your gender: M for male, F for female");
+                    String gender = read.next();
+
+                    System.out.println("Please enter your phone number: ");
+                    String phone = read.next();
+
+                    LocalDate regDate=java.time.LocalDate.now();
+
+                    System.out.println("Please enter your birthday: ");
+                    String bDay=read.next();
+
+                    System.out.println("Please select your subcategory: ");
+                    System.out.println("1. Health Care workers;  2. Elderly (>=65);     3.Immunologically Compromised; ");
+                    System.out.println("4. Teachers;             5.Children below 10;   6.Physical proximity to first priority; ");
+                    System.out.println("7. Essential Service Workers;                   8.Physical proximity to second priority; ");
+                    System.out.println("9. Other ");
+                    int choice= read.nextInt();
+                    int priority=-1;
+                    String subcategory="";
+                    if (choice<=0 || choice >9){
+                        System.out.println("Please input a valid choice");
+                    }
+                    if(1<=choice && choice<=3){
+                        priority=1;
+                        if (choice==1){
+                            subcategory="Health Care";
+                        }else if(choice==2){
+                            subcategory="Elderly";
+                        }else{
+                            subcategory="IC";
+                        }
+                    }else if(4<=choice && choice<=6){
+                        priority=2;
+                        if(choice==4){
+                            subcategory="Teacher";
+                        }else if(choice==5){
+                            subcategory="Children";
+                        }else{
+                            subcategory="PP1";
+                        }
+                    }else if(choice==7 || choice==8){
+                        priority=3;
+                        if(choice==7){
+                            subcategory="Essential Service";
+                        }else{
+                            subcategory="PP2";
+                        }
+
+                    }else{
+                        priority=4;
+                        subcategory="Other";
+                    }
+                    System.out.println("Your priority number is "+priority+" with subcategory "+subcategory);
+
+
+                    System.out.println("Please enter your Postal Code, city and street address");
+                    String postal=read.next();
+                    String city=read.next();
+                    String address=read.next();
+
+                    //insert
+                    if (action==0){
+                    try
+                    {
+                        String insertSQL = "INSERT INTO Person VALUES(\'"+HI+"\',\'"+name+"\',\'"+gender+"\',\'"+phone+"\',\'"+bDay+"\',\'"+regDate+"\',"+priority+",\'"+subcategory+"\',\'"+postal+"\',\'"+address+"\',\'"+city+"\')";
+
+                        System.out.println ( insertSQL) ;
+                        statement.executeUpdate ( insertSQL) ;
+                        System.out.println ( "DONE" ) ;
+
+                    }
+                    catch (SQLException e)
+                    {
+                        sqlCode = e.getErrorCode(); // Get SQLCODE
+                        sqlState = e.getSQLState(); // Get SQLSTATE
+                        System.out.println("sqlCode: "+sqlCode+", sqlState: "+sqlState);
+                        }}
+
+                    //update
+                    else{
+                        System.out.println("Updating existing account with new information: ");
+                        String updateSQL = "UPDATE Person SET NAME = \'"+name+"\', GENDER=\'"+gender+"\',PHONE=\'"+phone+"\'," +
+                                        "BDAY=\'"+bDay+"\',PRI#="+priority+",SUBCATEGORY=\'"+subcategory+"\',POSTAL=\'"+postal+"\',STRADDR=\'"
+                                        +address+"\',CITY=\'"+city+"\' WHERE HI#=\'"+HI+"\'";
+                                System.out.println(updateSQL);
+                                statement.executeUpdate(updateSQL);
+                                System.out.println("DONE");
+                    }
+                    }
+                    /* Assign slot to person ********************************************************/
+                else if (opt==2){
+                    System.out.println("2. Assign a slot to a Person --- ");
+                    System.out.println("Please enter your Health Insurance Number: ");
+                    String HI=read.next();
+                    String name="";
+
+                    //retireving persons HI number and name
+                    String getName = "SELECT name from Person WHERE HI# = \'"+HI+"\'";
+                    java.sql.ResultSet rsname = statement.executeQuery ( getName ) ;
+
+                    while ( rsname.next ( ) )
+                    {
+                        name=rsname.getString("name");
+                    }
+                    System.out.println("Hello "+name);
+
+                    //continue entering information
+                    System.out.println("Please enter preferable Location name, slot#, Date and Time ");
+                    String location = read.next();
+                    String slotNum = read.next();
+                    String date = read.next();
+                    String time = read.next();
+                    LocalDate assignDate = java.time.LocalDate.now();
+                    int success = 0;
+
+                    System.out.println("Checking vaccination records... ");
+
+                    //check vaccination record from slot assignment
+                    String getRecord = "SELECT * FROM SLOTASSIGNMENT WHERE HI#= \'"+HI+"\'";
+                    java.sql.ResultSet rsRecord = statement.executeQuery ( getRecord ) ;
+                    int vaccineRecords=0; //no previous records
+                    int dosesRequired=0; //required # doses
+                    int vaccineCounts=0; //doses taken
+                    String locationRecord=""; //previous shot location
+                    String dateRecord=""; //previous shot date
+                    String vaccine="";
+
+                    while ( rsRecord.next ( ) )
+                    {
+                        vaccineCounts++;
+                        locationRecord=rsRecord.getString("name");
+                        dateRecord=rsRecord.getString("date");
+                        vaccineRecords=1;
+
+                    }
+
+                    //if previous records exist, check #doses
+                    if(vaccineRecords==1) {
+                        String getVaccine = "SELECT * FROM AVAILABLESHOTS WHERE name= \'" + locationRecord +
+                                "\' AND shotDate= \'" + dateRecord + "\'";
+                        java.sql.ResultSet rsVaccine = statement.executeQuery(getVaccine);
+                        while (rsVaccine.next()) {
+                            vaccine = rsVaccine.getString("vaccine");
+                        }
+
+                        //check required doses
+                        String getRequiredDoses = "SELECT #DOSE FROM SHOT WHERE vaccine= \'" + vaccine + "\'";
+                        java.sql.ResultSet rsDoses = statement.executeQuery(getRequiredDoses);
+
+                        while (rsDoses.next()) {
+                            dosesRequired = rsDoses.getInt("#dose");
+                        }
+
+
+                        System.out.println("Already took " + vaccineCounts + " doses");
+                        System.out.println("required number of doses: " + dosesRequired);
+                        System.out.println("Records: last shot taken at " + locationRecord + " at " + dateRecord + " using " + vaccine);
+
+                        if (dosesRequired <= vaccineCounts) {
+                            System.out.println("Sorry, you cannot take more than required doses");
+                            break outer;
+                        }
+                    }else{
+                        System.out.println("No previous vaccination records ");
+                    }
+
+
+
+                        //check if date past assignDate
+                        LocalDate preferDate=LocalDate.parse(date);
+                        if(preferDate.compareTo(assignDate)==-1){
+                            System.out.println("Date selected passed current date. ");
+                            break outer;
+                        }
+
+                        //check if slot is available
+                        String checkSlot = "SELECT * FROM Slot WHERE name=\'" + location + "\' AND slot#=\'" + slotNum +
+                                "\' AND date=\'" + date + "\' AND time=\'" + time + "\'";
+                        java.sql.ResultSet rsSlot = statement.executeQuery(checkSlot);
+                        int flag=0;
+                        while (rsSlot.next()) {
+                           flag=1;
+                        }
+
+                        if (flag==0){
+                         System.out.println("Slot not available at given time and location. ");
+                          break outer;}
+
+
+                    //check if its previously assigned to others
+                    //and generate random 5 digit assign id
+                    System.out.println("checking duplicate assignment... ");
+                    String assignID=generateAssignID();
+                    String checkAssignments = "SELECT * FROM SlotAssignment WHERE name=\'" + location + "\' AND slot#=\'" + slotNum +
+                            "\' AND date=\'" + date + "\' AND time=\'" + time + "\'";
+                    java.sql.ResultSet rsAssignment = statement.executeQuery(checkAssignments);
+
+                    while (rsAssignment.next()){
+                        String id=rsAssignment.getString("assignID");
+                        if(id.equals(assignID)){
+                            assignID=generateAssignID();
+                        }
+                        System.out.println("Slot not available at given time and location. ");
+                        break outer;
+                    }
+
+                    //make assignment
+                    String insertAssignment = "INSERT INTO SlotAssignment VALUES (\'"+ assignID+"\',\'"+date+"\',\'"+HI+
+                    "\',\'"+location+"\',\'"+slotNum+"\',\'"+date+"\',\'"+time+"\')";
+
+                    statement.executeUpdate ( insertAssignment ) ;
+                    System.out.println("Assignment successful with assignID: "+assignID);
+
+                }
+                /*enter vaccination information ********************************************************/
+                else{
+                    System.out.println("3. Enter Vaccination information ---");
+                    //generate recordID
+                    String recordID=generateAssignID();
+                    String date="";
+                    String time="";
+                    int slotNum=-1;
+                    String location="";
+                    String HI="";
+
+                    System.out.println("Please enter assignID for the corresponding slot assignment: ");
+                    String assignID=read.next();
+
+                    //get location,slot#,date,time of vaccination from assignID
+                    String querySlot = "SELECT * from SlotAssignment WHERE AssignID = \'"+assignID+"\'";
+                    java.sql.ResultSet rsSlot = statement.executeQuery ( querySlot ) ;
+
+                    while ( rsSlot.next ( ) )
+                    {
+                        HI=rsSlot.getString("HI#");
+                        date=rsSlot.getString("date");
+                        time=rsSlot.getString("time");
+                        slotNum=rsSlot.getInt("slot#");
+                        location=rsSlot.getString("name");
+                    }
+                    System.out.println("Health Insurance Number: "+HI+", vaccinated at "+location+" on "+date+", "+time+" at slot number "+slotNum);
+
+                    System.out.println("Please enter the vacCompany, batch number and vial number: ");
+                    String vacCompany=read.next();
+                    String batchNum=read.next();
+                    String vialNum =read.next();
+
+                    //check previous record: vaccine should be the same
+                    //check if vaccination info is already entered for the day
+                    String checkVaccine="SELECT vaccine,date FROM VACCINATIONRECORD WHERE HI# = \'"+HI+"\'";
+                    java.sql.ResultSet rsCheckVaccine = statement.executeQuery ( checkVaccine ) ;
+
+                    while(rsCheckVaccine.next()){
+                        String vaccine=rsCheckVaccine.getString("vaccine");
+                        String prevDate=rsCheckVaccine.getString("date");
+                        System.out.println("Previous record: vaccine type: "+vaccine+", date: "+prevDate);
+                        if (! vaccine.equals(vacCompany)){
+                            System.out.println("The vaccine type you entered does not match the previous record.");
+                            break outer;
+                        }
+                        if (prevDate.equals(date)){
+                            System.out.println("Information already entered in the same date.");
+                            break outer;
+                        }
+                    }
+
+                    System.out.println("Please enter license number for assigned nurse: ");
+                    String licenseNum=read.next();
+
+                    System.out.println("Entering into database...");
+
+                    //enter into database
+                    while(true){
+                        try{
+                            String insertRecord = "INSERT INTO vaccinationRecord VALUES(\'"+recordID+"\',\'"+vacCompany+"\',\'"+batchNum+"\',\'"+
+                                    vialNum+"\',\'"+HI+"\',\'"+licenseNum+"\',\'"+location+"\',"+slotNum+",\'"+date+"\',\'"+time+"\')";
+                            statement.executeUpdate(insertRecord);
+                            System.out.println("Information entered successfully! ");
+                            break outer;
+                        }catch(SQLException e){
+                            sqlCode = e.getErrorCode(); // Get SQLCODE
+                            sqlState = e.getSQLState(); // Get SQLSTATE
+
+                            //duplicate recordID
+                            if (sqlCode==-803){
+                                recordID=generateAssignID();
+                            }else{
+                                System.out.println("Something happened");
+                                break outer;
+                            }
+                        }
+                    }
+
+
+
+
+
+
+
+                }
+
+
+
+
+            }
+
+
+
+
+
+
+
+
+
+
+        }
+        statement.close ( ) ;
+        con.close ( ) ;
+
+
+
+
+    }
+    static String generateAssignID(){
+        String assignID="";
+        Random r=new Random();
+
+        for (int i=0; i<5;i++){
+            int j=r.nextInt(10);
+            assignID+=j+"";
+        }
+        return assignID;
+    }
+}
